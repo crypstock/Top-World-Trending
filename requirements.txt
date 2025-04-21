@@ -28,3 +28,4 @@ textblob
 matplotlib
 streamlit
 pymongo
+plotly
