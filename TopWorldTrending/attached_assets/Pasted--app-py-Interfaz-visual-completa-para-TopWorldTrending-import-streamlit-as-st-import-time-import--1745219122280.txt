@@ -1,0 +1,118 @@
+# app.py – Interfaz visual completa para TopWorldTrending
+import streamlit as st
+import time
+import json
+import os
+from datetime import datetime
+from modules.ebay_search import buscar_ebay
+from modules.mercado_libre import buscar_mercado_libre
+from modules.ai_analyzer import analizar_productos, guardar_tendencias
+
+# Configuración visual
+st.set_page_config(page_title="TopWorldTrending", layout="wide")
+
+# Pantalla de bienvenida (Splash Screen)
+if "pantalla_bienvenida" not in st.session_state:
+    st.session_state.pantalla_bienvenida = True
+
+if st.session_state.pantalla_bienvenida:
+    st.markdown("""
+        <div style='text-align:center; padding-top: 80px;'>
+            <h1 style='font-size:3.5em;'>TopWorldTrending</h1>
+            <p style='font-size:1.4em; color:gray;'>Smarter product analysis. More marketplaces. One powerful tool.</p>
+            <img src='https://cdn-icons-png.flaticon.com/512/1170/1170576.png' width='150'/>
+        </div>
+    """, unsafe_allow_html=True)
+    time.sleep(2.5)
+    st.session_state.pantalla_bienvenida = False
+    st.experimental_rerun()
+
+# Menú lateral
+menu = st.sidebar.selectbox("Menú de navegación:", [
+    "Dashboard",
+    "Buscar Productos",
+    "IA - Tendencias",
+    "Estadísticas del Mercado",
+    "Exportar Resultados"
+])
+
+# DASHBOARD
+if menu == "Dashboard":
+    st.title("Panel de Inicio")
+    st.markdown("Bienvenido a tu panel de control personal de productos en tendencia.")
+    st.info("Usa el menú lateral para comenzar tu búsqueda o ver resultados analizados por IA.")
+
+# BUSCADOR
+elif menu == "Buscar Productos":
+    st.title("Buscar Productos por Plataforma")
+    producto = st.text_input("Escribe una palabra clave para buscar productos:")
+    plataforma = st.selectbox("Selecciona plataforma", ["eBay", "Mercado Libre"])
+    max_resultados = st.slider("Número máximo de resultados", 5, 50, 10)
+
+    if st.button("Buscar productos") and producto:
+        resultados = []
+        if plataforma == "eBay":
+            resultados = buscar_ebay(producto, os.getenv("EBAY_APP_ID"))
+        elif plataforma == "Mercado Libre":
+            resultados = buscar_mercado_libre('MLM', producto, max_resultados)
+
+        if resultados:
+            st.success(f"Se encontraron {len(resultados)} productos en {plataforma}:")
+            for r in resultados:
+                st.markdown(f"#### {r['titulo']}")
+                st.image(r.get('imagen', ''), width=150)
+                st.write(f"Precio: ${r['precio']}")
+                st.write(f"[Ver producto]({r['link'] if 'link' in r else r['url']})")
+                st.markdown("---")
+        else:
+            st.warning("No se encontraron resultados.")
+
+# IA – ANÁLISIS
+elif menu == "IA - Tendencias":
+    st.title("Tendencias analizadas por IA")
+    carpetas = [f for f in os.listdir("data") if f.endswith(".json")]
+    if carpetas:
+        archivo = st.selectbox("Selecciona un archivo para mostrar tendencias guardadas:", carpetas)
+        with open(f"data/{archivo}", "r", encoding="utf-8") as f:
+            data = json.load(f)
+            for categoria, productos in data.items():
+                st.subheader(f"{categoria}")
+                for item in productos:
+                    st.markdown(f"- {item['producto']} ({item['veces']} veces)")
+    else:
+        st.warning("Aún no hay análisis guardados.")
+
+# ESTADÍSTICAS
+elif menu == "Estadísticas del Mercado":
+    import matplotlib.pyplot as plt
+
+    st.title("Gráficos y Estadísticas Generales")
+    jsons = [f for f in os.listdir("data") if f.endswith(".json")]
+    if jsons:
+        archivo = st.selectbox("Archivo de análisis:", jsons)
+        with open(f"data/{archivo}", "r") as f:
+            data = json.load(f)
+
+        for cat, productos in data.items():
+            st.subheader(cat)
+            labels = [p['producto'] for p in productos]
+            valores = [p['veces'] for p in productos]
+
+            fig, ax = plt.subplots()
+            ax.barh(labels, valores)
+            ax.set_xlabel("Frecuencia")
+            ax.set_title(f"{cat} - Popularidad")
+            st.pyplot(fig)
+    else:
+        st.info("No hay datos para mostrar aún.")
+
+# EXPORTACIONES
+elif menu == "Exportar Resultados":
+    st.title("Exportar archivos generados")
+    archivos = [f for f in os.listdir("data") if f.endswith(".json")]
+    if archivos:
+        archivo = st.selectbox("Selecciona archivo para descargar:", archivos)
+        with open(f"data/{archivo}", "rb") as f:
+            st.download_button("Descargar archivo JSON", f, file_name=archivo)
+    else:
+        st.info("No hay archivos aún para exportar.")
