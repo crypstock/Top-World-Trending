@@ -89,22 +89,9 @@ elif menu == "Search Products":
                             st.write(f"[View product]({row.get('Link', row.get('url', '#'))})")
 
 # AI ANALYSIS
-elif menu == "AI Analysis":
-    st.title("AI-Powered Trend Analysis")
-    
-    files = [f for f in os.listdir("data") if f.endswith(".csv")]
-    if files:
-        selected_file = st.selectbox("Select data to analyze:", files)
-        if st.button("Analyze trends"):
-            with st.spinner("Analyzing trends..."):
-                trends = TrendDetector().analyze_file(f"data/{selected_file}")
-                reviews = analyze_reviews(f"data/{selected_file}")
-                
-                if trends is not None:
-                    st.success("Analysis complete!")
-                    st.dataframe(trends)
-    else:
-        st.info("No data available for analysis. Please search for products first.")
+elif menu == "IA - Tendencias":
+    from ia_trends_panel import *
+
 
 # STATISTICS
 elif menu == "Market Statistics":
