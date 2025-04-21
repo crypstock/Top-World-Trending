@@ -27,4 +27,3 @@ streamlit
 textblob
 matplotlib
 streamlit
-pymongo
