@@ -42,18 +42,24 @@ if "splash_done" not in st.session_state:
     st.session_state.splash_done = False
 
 if not st.session_state.splash_done:
-    with st.container():
-        st.markdown("""
+    st.markdown("""
         <div class="gradient-bg">
-            <div class="hero" style="text-align:center;">
-                <h1 style="font-size:4rem; margin-bottom:0.4em;">TopWorldTrending</h1>
-                <p style="font-size:1.4rem;">Smarter product analysis. More marketplaces. One powerful tool.</p>
-                <img src="https://cdn-icons-png.flaticon.com/512/726/726814.png" width="120" style="margin:1.5em 0"/>
-                <button class="btn-start" onclick="window.location.reload()">Enter Dashboard</button>
+            <div class="hero" style="text‑align:center;">
+                <h1 style="font‑size:4rem;margin-bottom:0.4em;">TopWorldTrending</h1>
+                <p style="font‑size:1.4rem;">Smarter product analysis. More marketplaces. One powerful tool.</p>
+                <img src="https://cdn-icons-png.flaticon.com/512/726/726814.png" width="120"/>
             </div>
         </div>
-        """, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
+
+    # 👉  BOTÓN STREAMLIT
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("Enter Dashboard"):
+        st.session_state.splash_done = True
+        st.experimental_rerun()
+
     st.stop()
+
 
 # ---------- Login (demo) ---------- #
 if "user" not in st.session_state:
