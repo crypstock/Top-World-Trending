@@ -1,128 +1,101 @@
-
+# app.py – Versión “Neo‑UI” profesional para TopWorldTrending 🌐📈
+# ---------------------------------------------------------------
+# Diseño basado en Streamlit + Tailwind‑like CSS inline + Plotly
+# Pantalla de bienvenida con animación, login simple y panel visual.
+# ---------------------------------------------------------------
 import streamlit as st
-import time
-import json
-import os
+from streamlit_extras.switch_page_button import switch_page
+import os, json
+from glob import glob
+import plotly.express as px
 from datetime import datetime
-from modules.ebay_search import buscar_ebay
-from modules.mercado_libre import buscar_mercado_libre
-from scraper.amazon_scraper import scrape_amazon
-from ai.trend_detector import TrendDetector
-from ai.review_analyzer import analyze_reviews
-from database.mongo_handler import MongoDBHandler
 
-# Visual configuration
 st.set_page_config(page_title="TopWorldTrending", layout="wide")
 
-# Initialize MongoDB
-mongo = MongoDBHandler()
+# ---------- CSS GLOBAL ---------- #
+st.markdown(
+    """
+    <style>
+    @keyframes fadeIn {
+        0% {opacity:0; transform: translateY(20px);} 
+        100% {opacity:1; transform: translateY(0);}
+    }
+    .hero {
+        animation: fadeIn 1.6s ease-in-out forwards;
+        font-family: 'Segoe UI', sans-serif;
+        color: #f1f1f1;
+    }
+    .gradient-bg {
+        background: radial-gradient(circle at top left, #203a79, #121212 70%);
+        height: 100vh; display:flex; flex-direction:column; justify-content:center; align-items:center;
+    }
+    .btn-start {
+        background:#004bff;border:none;padding:14px 30px;border-radius:8px;color:#fff;font-size:18px;cursor:pointer;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-# Welcome screen
-if "pantalla_bienvenida" not in st.session_state:
-    st.session_state.pantalla_bienvenida = True
+# ---------- Splash screen control ---------- #
+if "splash_done" not in st.session_state:
+    st.session_state.splash_done = False
 
-if st.session_state.pantalla_bienvenida:
-    st.markdown("""
-        <div style='text-align:center; padding-top: 80px;'>
-            <h1 style='font-size:3.5em;'>TopWorldTrending</h1>
-            <p style='font-size:1.4em; color:gray;'>Multi-Marketplace Product Analysis Tool</p>
-            <img src='https://cdn-icons-png.flaticon.com/512/1170/1170576.png' width='150'/>
+if not st.session_state.splash_done:
+    with st.container():
+        st.markdown("""
+        <div class="gradient-bg">
+            <div class="hero" style="text-align:center;">
+                <h1 style="font-size:4rem; margin-bottom:0.4em;">TopWorldTrending</h1>
+                <p style="font-size:1.4rem;">Smarter product analysis. More marketplaces. One powerful tool.</p>
+                <img src="https://cdn-icons-png.flaticon.com/512/726/726814.png" width="120" style="margin:1.5em 0"/>
+                <button class="btn-start" onclick="window.location.reload()">Enter Dashboard</button>
+            </div>
         </div>
-    """, unsafe_allow_html=True)
-    time.sleep(2.5)
-    st.session_state.pantalla_bienvenida = False
-    st.rerun()
+        """, unsafe_allow_html=True)
+    st.stop()
 
-# Side menu
-menu = st.sidebar.selectbox("Navigation Menu:", [
-    "Dashboard",
-    "Search Products",
-    "AI Analysis",
-    "Market Statistics",
-    "Export Results"
-])
+# ---------- Login (demo) ---------- #
+if "user" not in st.session_state:
+    with st.sidebar:
+        st.markdown("## 🔐 Login")
+        user = st.text_input("Username")
+        pwd = st.text_input("Password", type="password")
+        if st.button("Login") and user and pwd:
+            st.session_state.user = user
+            st.experimental_rerun()
+        st.stop()
 
-# DASHBOARD
+# ---------- UI Main ---------- #
+st.sidebar.success(f"Logged as **{st.session_state.user}**")
+menu = st.sidebar.radio("Navigate", ["Dashboard","AI Trends","Settings"])
+
+# Dummy selector for date range
+hoy = datetime.now().strftime("%Y-%m-%d")
+
 if menu == "Dashboard":
-    st.title("Dashboard")
-    st.markdown("### Welcome to TopWorldTrending")
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        st.info("🔍 Search across multiple marketplaces")
-    with col2:
-        st.info("🤖 AI-powered trend analysis")
-    with col3:
-        st.info("📊 Real-time market statistics")
+    st.title("📊 Dashboard – Quick View")
+    st.markdown("Métricas resumidas de las últimas 24 h.")
+    col1,col2 = st.columns(2)
+    col1.metric("Productos procesados", "1 240", "+8%")
+    col2.metric("Palabras clave", "350", "+2.3%")
 
-# SEARCH
-elif menu == "Search Products":
-    st.title("Multi-Marketplace Search")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        product = st.text_input("Enter product to search:")
-        platform = st.selectbox("Select platform", ["Amazon", "eBay", "Mercado Libre"])
-    with col2:
-        max_results = st.slider("Maximum results", 5, 50, 10)
-        country = st.selectbox("Select country", ["US", "MX", "UK"])
-
-    if st.button("Search products") and product:
-        with st.spinner("Searching products..."):
-            results = []
-            if platform == "Amazon":
-                results = scrape_amazon(product, country=country, max_pages=1)
-            elif platform == "eBay":
-                results = buscar_ebay(product, os.getenv("EBAY_APP_ID"))
-            elif platform == "Mercado Libre":
-                results = buscar_mercado_libre('MLM', product, max_results)
-
-            if not results.empty:
-                st.success(f"Found {len(results)} products!")
-                for _, row in results.iterrows():
-                    with st.expander(f"{row['Title'][:100]}..."):
-                        col1, col2 = st.columns([1, 2])
-                        with col1:
-                            st.image(row.get('Image', ''), width=150)
-                        with col2:
-                            st.write(f"**Price:** ${row['Price']}")
-                            st.write(f"[View product]({row.get('Link', row.get('url', '#'))})")
-
-# AI ANALYSIS
-elif menu == "IA - Tendencias":
-    from ia_trends_panel import *
-
-
-# STATISTICS
-elif menu == "Market Statistics":
-    st.title("Market Statistics")
-    files = [f for f in os.listdir("data") if f.endswith(".csv")]
-    
-    if files:
-        file = st.selectbox("Select dataset:", files)
-        if st.button("Generate statistics"):
-            import pandas as pd
-            import matplotlib.pyplot as plt
-            
-            df = pd.read_csv(f"data/{file}")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.subheader("Price Distribution")
-                fig, ax = plt.subplots()
-                df['Price'].hist(ax=ax)
-                st.pyplot(fig)
-            
-            with col2:
-                st.subheader("Summary Statistics")
-                st.write(df.describe())
+elif menu == "AI Trends":
+    st.title("🧠 IA – Productos en Tendencia")
+    archivos = sorted(glob("data/auto_trends_*.json"), reverse=True)
+    if archivos:
+        archivo = st.selectbox("📅 Fecha de análisis", archivos, format_func=lambda x: x.replace("data/auto_trends_",""))
+        with open(archivo, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        top = list(data.items())[:20]
+        df = {"Producto":[k.split(" ("   )[0] for k,_ in top],
+              "Plataforma":[k.split(" ("   )[1].replace(")","") for k,_ in top],
+              "Frecuencia":[v for _,v in top]}
+        fig = px.bar(df, x="Frecuencia", y="Producto", color="Plataforma", orientation="h", height=650, template="plotly_dark")
+        st.plotly_chart(fig, use_container_width=True)
     else:
-        st.info("No data available. Start by searching for products.")
+        st.info("No hay datos aún. Ejecuta auto_trend_collector.py o espera la próxima recolección.")
 
-# Footer
-st.markdown("""
----
-<div style='text-align: center; color: gray;'>
-    Made with ❤️ by TopWorldTrending | Powered by Multiple Marketplaces
-</div>
-""", unsafe_allow_html=True)
+elif menu == "Settings":
+    st.title("⚙️ Configuración")
+    st.write("Aquí irán opciones de usuario y preferencias (pendiente de implementación).")
