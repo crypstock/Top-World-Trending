@@ -51,3 +51,6 @@ else:
 
     st.markdown("---")
     st.info("Estos resultados son generados automáticamente por la IA, sin intervención manual.")
+
+# --- Smart Cart always on ---
+import smart_cart
