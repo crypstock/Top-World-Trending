@@ -56,7 +56,7 @@ if not st.session_state.splash_done:
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("Enter Dashboard"):
         st.session_state.splash_done = True
-        st.experimental_rerun()
+        st.rerun()
 
     st.stop()
 
