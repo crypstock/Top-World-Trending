@@ -30,3 +30,8 @@ streamlit
 pymongo
 plotly
 streamlit_extras
+streamlit
+streamlit-lottie
+streamlit-chat
+python-dotenv
+amazon-paapi
