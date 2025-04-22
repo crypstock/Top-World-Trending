@@ -105,3 +105,7 @@ elif menu == "AI Trends":
 elif menu == "Settings":
     st.title("⚙️ Configuración")
     st.write("Aquí irán opciones de usuario y preferencias (pendiente de implementación).")
+
+# --- Smart Cart always on ---
+import smart_cart
+
