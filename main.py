@@ -48,3 +48,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# --- Smart Cart always on ---
+import smart_cart
