@@ -34,4 +34,4 @@ streamlit
 streamlit-lottie
 streamlit-chat
 python-dotenv
-amazon-paapi
+python-amazon-paapi
