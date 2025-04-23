@@ -35,6 +35,7 @@ streamlit-lottie
 streamlit-chat
 python-dotenv
 python-amazon-paapi
-openai
 python-dotenv
+openai>=1.0.0
+python-amazon-paapi
 
