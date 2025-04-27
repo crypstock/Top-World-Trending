@@ -1,0 +1,119 @@
+import shutil
+import os
+
+# Reestablecer la estructura del proyecto
+base_dir = "/mnt/data/TopWorldTrending"
+os.makedirs(base_dir, exist_ok=True)
+
+# Scripts de scrapers integrados
+scripts = {
+    "amazon_scraper.py": '''
+# AMAZON SCRAPER
+# Scrapea productos de Amazon (MX y US) según un término de búsqueda.
+# Guarda los datos en CSV
+
+import requests
+from bs4 import BeautifulSoup
+import csv
+
+def scrape_amazon(term, country="US"):
+    headers = {
+        "User-Agent": "Mozilla/5.0",
+    }
+    domain = "amazon.com" if country == "US" else "amazon.com.mx"
+    url = f"https://www.{domain}/s?k={term.replace(' ', '+')}"
+
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    results = soup.find_all("div", {"data-component-type": "s-search-result"})
+    extracted = []
+
+    for item in results[:10]:
+        title = item.h2.text.strip()
+        link = "https://www." + domain + item.h2.a["href"]
+        extracted.append((title, link))
+
+    filename = f"{country}_amazon_{term.replace(' ', '_')}.csv"
+    with open(filename, "w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["Title", "Link"])
+        writer.writerows(extracted)
+
+    print(f"Saved: {filename}")
+''',
+
+    "ebay_scraper.py": '''
+# EBAY SCRAPER
+# Extrae los productos más relevantes de eBay
+
+import requests
+from bs4 import BeautifulSoup
+import csv
+
+def scrape_ebay(term, country="US"):
+    domain = "ebay.com" if country == "US" else "ebay.com.mx"
+    url = f"https://www.{domain}/sch/i.html?_nkw={term.replace(' ', '+')}"
+
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    results = soup.select("li.s-item")
+    extracted = []
+
+    for item in results[:10]:
+        title_tag = item.select_one("h3.s-item__title")
+        link_tag = item.select_one("a.s-item__link")
+        if title_tag and link_tag:
+            extracted.append((title_tag.text.strip(), link_tag["href"]))
+
+    filename = f"{country}_ebay_{term.replace(' ', '_')}.csv"
+    with open(filename, "w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["Title", "Link"])
+        writer.writerows(extracted)
+
+    print(f"Saved: {filename}")
+''',
+
+    "mercado_libre_scraper.py": '''
+# MERCADO LIBRE SCRAPER
+# Extrae los productos más populares de Mercado Libre (MX)
+
+import requests
+from bs4 import BeautifulSoup
+import csv
+
+def scrape_mercado_libre(term):
+    url = f"https://listado.mercadolibre.com.mx/{term.replace(' ', '-')}"
+
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    results = soup.select("li.results-item, .ui-search-result")
+    extracted = []
+
+    for item in results[:10]:
+        title_tag = item.select_one("h2, .ui-search-item__title")
+        link_tag = item.select_one("a")
+        if title_tag and link_tag:
+            extracted.append((title_tag.text.strip(), link_tag["href"]))
+
+    filename = f"MX_mercadolibre_{term.replace(' ', '_')}.csv"
+    with open(filename, "w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerow(["Title", "Link"])
+        writer.writerows(extracted)
+
+    print(f"Saved: {filename}")
+''',
+}
+
+# Guardar scripts en archivos
+for filename, content in scripts.items():
+    with open(os.path.join(base_dir, filename), "w") as f:
+        f.write(content)
+
+# Comprimir como archivo ZIP
+zip_path = "/mnt/data/TopWorldTrending_Scraper_v1.zip"
+shutil.make_archive(zip_path.replace(".zip", ""), 'zip', base_dir)
+
+zip_path  # Mostrar la ruta final para que puedas descargarlo
+
