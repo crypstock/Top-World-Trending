@@ -1,4 +1,3 @@
-
 import streamlit as st
 import time
 import json
@@ -87,55 +86,3 @@ elif menu == "Search Products":
                         with col2:
                             st.write(f"**Price:** ${row['Price']}")
                             st.write(f"[View product]({row.get('Link', row.get('url', '#'))})")
-
-# AI ANALYSIS
-elif menu == "AI Analysis":
-    st.title("AI-Powered Trend Analysis")
-    
-    files = [f for f in os.listdir("data") if f.endswith(".csv")]
-    if files:
-        selected_file = st.selectbox("Select data to analyze:", files)
-        if st.button("Analyze trends"):
-            with st.spinner("Analyzing trends..."):
-                trends = TrendDetector().analyze_file(f"data/{selected_file}")
-                reviews = analyze_reviews(f"data/{selected_file}")
-                
-                if trends is not None:
-                    st.success("Analysis complete!")
-                    st.dataframe(trends)
-    else:
-        st.info("No data available for analysis. Please search for products first.")
-
-# STATISTICS
-elif menu == "Market Statistics":
-    st.title("Market Statistics")
-    files = [f for f in os.listdir("data") if f.endswith(".csv")]
-    
-    if files:
-        file = st.selectbox("Select dataset:", files)
-        if st.button("Generate statistics"):
-            import pandas as pd
-            import matplotlib.pyplot as plt
-            
-            df = pd.read_csv(f"data/{file}")
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                st.subheader("Price Distribution")
-                fig, ax = plt.subplots()
-                df['Price'].hist(ax=ax)
-                st.pyplot(fig)
-            
-            with col2:
-                st.subheader("Summary Statistics")
-                st.write(df.describe())
-    else:
-        st.info("No data available. Start by searching for products.")
-
-# Footer
-st.markdown("""
----
-<div style='text-align: center; color: gray;'>
-    Made with ❤️ by TopWorldTrending | Powered by Multiple Marketplaces
-</div>
-""", unsafe_allow_html=True)
