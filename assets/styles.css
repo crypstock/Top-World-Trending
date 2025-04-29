@@ -1,0 +1,40 @@
+/* Estilos personalizados para TopWorldTrending */
+
+body {
+    background-color: #1f2937;
+    color: #f9fafb;
+    font-family: 'Poppins', sans-serif;
+}
+
+h1, h2, h3 {
+    color: #60a5fa;
+    text-align: center;
+}
+
+.sidebar .sidebar-content {
+    background: #111827;
+}
+
+.stButton>button {
+    background-color: #3b82f6;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+.stTextInput>div>div>input {
+    background-color: #374151;
+    color: #f9fafb;
+}
+
+a {
+    color: #93c5fd;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #60a5fa;
+    text-decoration: underline;
+}
